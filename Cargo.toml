@@ -5,9 +5,13 @@ authors = ["Barret Rennie <barret@brennie.ca>"]
 license = "MIT/Apache-2.0"
 edition = "2018"
 
-[lib]
+[[bin]]
 name = "cribbage"
 path = "src/main.rs"
 
 [dependencies]
 rand = "0.7.0"
+tokio = "0.1.22"
+trust-dns-resolver = { version = "0.11.1", features = ["mdns"] }
+structopt = "0.2.18"
+trust-dns-server = "0.16.1"
