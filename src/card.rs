@@ -205,6 +205,58 @@ impl Deck {
     pub fn cards(&self) -> &[Card] {
         &self.0
     }
+
+    /// Deal out two hands.
+    pub fn deal(&mut self) -> (Hand, Hand) {
+        let mut dealer = Vec::with_capacity(6);
+        let mut opponent = Vec::with_capacity(6);
+
+        opponent.push(self.0.pop().unwrap());
+        dealer.push(self.0.pop().unwrap());
+        opponent.push(self.0.pop().unwrap());
+        dealer.push(self.0.pop().unwrap());
+        opponent.push(self.0.pop().unwrap());
+        dealer.push(self.0.pop().unwrap());
+        opponent.push(self.0.pop().unwrap());
+        dealer.push(self.0.pop().unwrap());
+        opponent.push(self.0.pop().unwrap());
+        dealer.push(self.0.pop().unwrap());
+        opponent.push(self.0.pop().unwrap());
+        dealer.push(self.0.pop().unwrap());
+
+        (
+            Hand {
+                unplayed: dealer,
+                played: Vec::with_capacity(6),
+            },
+
+            Hand {
+                unplayed: opponent,
+                played: Vec::with_capacity(6),
+            },
+        )
+    }
+
+    /// Cut the deck randomly and return the cut card.
+    pub fn cut<R>(&mut self, rng: &mut R) -> Card
+    where
+        R: Rng,
+    {
+        let index: usize = rng.gen_range(0, self.0.len());
+        self.0.remove(index)
+    }
+}
+
+#[derive(Debug, Eq, PartialEq)]
+pub struct Hand {
+    unplayed: Vec<Card>,
+    played: Vec<Card>,
+}
+
+impl Hand {
+    pub fn cards(&self) -> &[Card] {
+        &self.unplayed
+    }
 }
 
 #[cfg(test)]
