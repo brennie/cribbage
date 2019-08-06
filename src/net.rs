@@ -37,7 +37,7 @@ fn multicast_udp_socket(
 
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 struct AdvertisementResponse {
-    magic: &'static str,
+    magic: String,
     port: u16,
 }
 
@@ -61,7 +61,7 @@ pub fn serve_advertisement(port: u16) -> impl Future<Item = (), Error = ()> {
                     if bytes == MAGIC_REQUEST {
                         let rsp = Bytes::from(
                             bincode::serialize(&AdvertisementResponse {
-                                magic: MAGIC_RESPONSE,
+                                magic: MAGIC_RESPONSE.into(),
                                 port: port,
                             })
                             .unwrap(),
@@ -97,23 +97,16 @@ pub fn query_advertisements() -> impl Future<Item = (), Error = ()> {
     tx.send((Bytes::from(MAGIC_REQUEST), multicast_addr))
         .map_err(drop)
         .and_then(move |_tx| {
-            future::loop_fn(rx, |rx| {
-                rx
-                    .into_future()
-                    .map_err(drop)
-                    .map(|(rsp, rx)| {
-                        if let Some((rsp, addr)) = rsp {
-                            match bincode::deserialize::<AdvertisementResponse>(&rsp) {
-                                Ok(a) => drop(a),
-                                Err(e) => drop(e),
-                            }
-
-                            future::Loop::Continue(rx)
-                        } else {
-                            future::Loop::Break(())
+            rx.for_each(|(rsp, addr)| {
+                    if let Ok(rsp) = bincode::deserialize::<AdvertisementResponse>(&rsp) {
+                        if rsp.magic == MAGIC_RESPONSE {
+                            println!("{:?} {:?}", rsp, addr);
                         }
-                    })
+
+                    }
+
+                    future::ok(())
+                })
+                .map_err(drop)
             })
-        })
-        .map(drop)
 }

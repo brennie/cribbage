@@ -28,6 +28,7 @@ fn main() {
 
     match cmd {
         Command::Serve => serve(),
+        Command::List => list(),
         _ => unimplemented!(),
     }
 }
@@ -35,5 +36,10 @@ fn main() {
 fn serve() {
     let adv = net::serve_advertisement(2929);
 
+    tokio::run(adv);
+}
+
+fn list() {
+    let adv = net::query_advertisements();
     tokio::run(adv);
 }
