@@ -63,6 +63,8 @@ pub fn serve_advertisement(port: u16) -> impl Future<Item = (), Error = ()> {
                     .unwrap(),
                 );
 
+                println!("request from {:#?}", addr);
+
                 future::Either::A(tx.send((rsp, addr)).map_err(drop))
             } else {
                 future::Either::B(future::ok(tx))
@@ -72,7 +74,7 @@ pub fn serve_advertisement(port: u16) -> impl Future<Item = (), Error = ()> {
 }
 
 pub fn query_advertisements() -> impl Future<Item = (), Error = ()> {
-    let local_addr = SocketAddrV4::new(IP_ALL.into(), 1234);
+    let local_addr = SocketAddrV4::new(IP_ALL.into(), 0);
     let multicast_addr = SocketAddr::new(IpAddr::V4(IP_MULTICAST), ADVERT_PORT);
 
     let socket = UdpSocket::from_std(
