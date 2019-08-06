@@ -8,6 +8,7 @@
 
 use std::io;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4};
+use std::time::Duration;
 
 use bincode;
 use bytes::Bytes;
@@ -51,8 +52,7 @@ pub fn serve_advertisement(port: u16) -> impl Future<Item = (), Error = ()> {
 
     let (tx, rx) = UdpFramed::new(socket, LengthDelimitedCodec::new()).split();
 
-    rx
-        .map_err(|e| eprintln!("recv: {}", e))
+    rx.map_err(|e| eprintln!("recv: {}", e))
         .fold(tx, move |tx, (bytes, addr)| {
             if bytes == MAGIC_REQUEST {
                 let rsp = Bytes::from(
@@ -96,5 +96,11 @@ pub fn query_advertisements() -> impl Future<Item = (), Error = ()> {
                 future::ok(())
             })
             .map_err(drop)
+        })
+        .timeout(Duration::from_millis(1000))
+        .map_err(|e| {
+            if !e.is_elapsed() {
+                panic!("timer: {:#?}", e);
+            }
         })
 }
