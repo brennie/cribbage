@@ -37,13 +37,19 @@ fn multicast_udp_socket(local_addr: &SocketAddrV4) -> io::Result<std::net::UdpSo
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 struct AdvertisementResponse {
     magic: String,
+    name: String,
     port: u16,
+    has_password: bool,
 }
 
 const MAGIC_REQUEST: &'static str = "cribbage-advertisement-request";
 const MAGIC_RESPONSE: &'static str = "cribbage-advertisement-response";
 
-pub fn serve_advertisement(port: u16) -> impl Future<Item = (), Error = ()> {
+pub fn serve_advertisement(
+    name: String,
+    port: u16,
+    has_password: bool,
+) -> impl Future<Item = (), Error = ()> {
     let socket = UdpSocket::from_std(
         multicast_udp_socket(&SocketAddrV4::new(IP_ALL, ADVERT_PORT)).unwrap(),
         &tokio::reactor::Handle::default(),
@@ -59,6 +65,8 @@ pub fn serve_advertisement(port: u16) -> impl Future<Item = (), Error = ()> {
                     bincode::serialize(&AdvertisementResponse {
                         magic: MAGIC_RESPONSE.into(),
                         port: port,
+                        name: name.clone(),
+                        has_password,
                     })
                     .unwrap(),
                 );

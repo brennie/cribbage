@@ -17,24 +17,36 @@ enum Command {
     List,
 
     #[structopt(name = "serve")]
-    Serve,
+    Serve(ServeOptions),
 
     #[structopt(name = "connect")]
     Connect,
+}
+
+#[derive(Debug, StructOpt)]
+struct ServeOptions {
+    #[structopt(name = "name")]
+    name: String,
+
+    #[structopt(long, default_value = "2929")]
+    port: u16,
+
+    #[structopt(long)]
+    password: Option<String>,
 }
 
 fn main() {
     let cmd = Command::from_args();
 
     match cmd {
-        Command::Serve => serve(),
+        Command::Serve(options) => serve(options),
         Command::List => list(),
         _ => unimplemented!(),
     }
 }
 
-fn serve() {
-    let adv = net::serve_advertisement(2929);
+fn serve(options: ServeOptions) {
+    let adv = net::serve_advertisement(options.name.clone(), options.port, options.password.is_some());
 
     tokio::run(adv);
 }
